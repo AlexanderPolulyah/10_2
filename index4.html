@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <!-- HW10: Functional OOP - Part2 -->
+    <script>//код из постановки задачи
+        let formContainer = document.body;//доработано
+
+        function Form(el, data, okCallback, cancelCallback){
+            let formBody = document.createElement('div')
+            //formBody.setAttribute('id','idForm')//доработано (нужно для обращения к div)
+
+            let okButton = document.createElement('button')
+            okButton.innerHTML = 'OK'
+
+            let cancelButton = document.createElement('button')
+            cancelButton.innerHTML = 'Cancel'
+
+            formBody.innerHTML = '<h1>тут будет форма после перервы</h1>'
+
+            // let i = 0;
+            // for(let key of Object.keys(data)){
+            //     let item = addElement(formBody,key,data[key],'id' + i++);
+            // }
+
+            if (typeof okCallback === 'function'){
+                formBody.appendChild(okButton);
+                okButton.onclick = (e) => {
+                    console.log(this)
+                    console.log(data)//
+                    this.okCallback(e)
+                }
+            }
+
+            if (typeof cancelCallback === 'function'){
+                formBody.appendChild(cancelButton);
+                cancelButton.onclick = cancelCallback
+            }
+
+            el.appendChild(formBody)
+
+
+            this.okCallback     = okCallback
+            this.cancelCallback = cancelCallback
+
+            this.data           = data
+            //main = this;//доработано
+            this.validators     = {}
+            //return this//доработано
+            this.formBody = formBody //ВОТ ЗДЕСЬ !!!
+        }
+
+        let form = new Form(formContainer, {
+            name: 'Anakin',
+            surname: 'Skywalker',
+            married: true,
+            birthday: new Date((new Date).getTime() - 86400000 * 30*365)
+        }, () => console.log('ok'),() => console.log('cancel') )
+        form.okCallback = () => console.log('ok2')
+
+        form.validators.surname = (value, key, data, input) => value.length > 2 && 
+                                                            value[0].toUpperCase() == value[0] &&
+                                                            !value.includes(' ') ? true : 'Wrong surname'
+        console.log(form)  
+    </script>
+    <script>//код решения
+        form.validators.name = (value, key, data, input) => value.length > 2 && 
+                                                            value[0].toUpperCase() == value[0] &&
+                                                            !value.includes(' ') ? true : 'Wrong name'
+        form.validators.married = (value, key, data, input) => 
+                                                            [false,true].includes(value[0].toLowerCase()) ? true : 'Wrong surname'
+
+        let bInitialization = true;//признак начальной инициализации - нужен, чтобы циклично не вызывались обработчики
+        //let main = null;//объект, который вызывает функцию (нужен для доступа к data)
+
+        function addElement(parent, name, value, id){
+            parent.appendChild(document.createElement('br'));
+
+            let caption = document.createElement('label');
+            caption.setAttribute('for', id);
+            caption.innerText = name + ': ';
+            parent.appendChild(caption);
+
+            let item = document.createElement('input');
+            item.setAttribute('type','text');
+            item.setAttribute('id',id);
+            item.value = value;
+            item.oninput = ()=>{
+                if(!bInitialization){
+                    //main.data[name] = this.value;
+                    let input = document.querySelector('#'+id);
+                    if(input !== null){
+                        form.data[name] = input.value; 
+                    }
+                }
+            }
+            let validator = form.validators[name];//main.validators.keys[name];
+            if(validator){
+                item.onchange = ()=>{
+                    if(!bInitialization){
+                        let input = document.querySelector('#'+id);
+                        if(input !== null){
+                            let b = validator(input.value,name,null,null);
+                            console.log(b);
+                        }
+                    }
+                }
+            }
+            //item.onchange = () => { console.log('w') }
+            parent.appendChild(item);
+
+            parent.appendChild(document.createElement('br'));
+        }
+
+        //добавляем все элементы data на форму
+        let i = 0;
+        for(let key of Object.keys(form.data)){
+            let item = addElement(form.formBody,key,form.data[key],'id' + i++);
+        }
+
+        bInitialization = false;
+    </script>
+</body>
+</html>
